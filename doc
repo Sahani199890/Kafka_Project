@@ -1,0 +1,349 @@
+Apache Kafka Integration and server deployment
+4. Deploy Kafka Server Using Docker
+4.1 Pull Kafka Image
+docker pull apache/kafka:4.1.1
+
+This downloads the Kafka broker image locally.
+
+4.2 Kafka Deployment Using Docker Run
+docker run -d \
+  --name dev_kafka \
+  -p 9092:9092 \
+  apache/kafka:4.1.1
+
+Explanation:
+-d → Run in background
+
+
+--name dev_kafka → Assign container name
+
+
+-p 9092:9092 → Expose Kafka broker port
+
+
+Kafka starts in KRaft mode by default
+
+
+
+4.3 Verify Kafka Server Status
+docker ps
+
+Expected output:
+dev_kafka   apache/kafka:4.1.1   Up   0.0.0.0:9092->9092/tcp
+
+This confirms the Kafka broker is running.
+
+5. Access Kafka Server Shell
+Kafka CLI tools are available inside the container.
+docker exec -it dev_kafka /bin/bash
+
+Navigate to Kafka binaries:
+cd /opt/kafka/bin
+
+
+6. Verify Kafka Broker Health
+./kafka-broker-api-versions.sh --bootstrap-server localhost:9092
+
+Purpose:
+Confirms broker is reachable
+
+
+Confirms Kafka startup success
+
+
+Validates network connectivity
+
+
+
+7. Kafka Topic Management
+7.1 List Existing Topics
+./kafka-topics.sh --bootstrap-server localhost:9092 --list
+
+Empty output means no topics exist
+
+
+This is normal for a new Kafka cluster
+
+
+
+7.2 Create Kafka Topic
+./kafka-topics.sh \
+  --bootstrap-server localhost:9092 \
+  --create \
+  --topic dev-topic1 \
+  --partitions 3 \
+  --replication-factor 1
+
+Explanation:
+dev-topic1 → Topic name
+
+
+3 partitions → Enables parallelism
+
+
+replication-factor 1 → Single broker setup
+
+
+
+7.3 Verify Topic Creation
+./kafka-topics.sh --bootstrap-server localhost:9092 --list
+
+Expected:
+dev-topic1
+
+
+7.4 Describe Topic Details
+./kafka-topics.sh \
+  --bootstrap-server localhost:9092 \
+  --describe \
+  --topic dev-topic1
+
+Shows:
+Partition count
+
+
+Leader broker
+
+
+Replica assignments
+
+
+In-sync replicas (ISR)
+
+
+
+8. Kafka Partition Concepts
+Messages are written to partitions
+
+
+Ordering is guaranteed within a partition
+
+
+Partitions enable:
+
+
+Parallel producers
+
+
+Parallel consumers
+
+
+One consumer per partition per consumer group
+
+
+
+9. Validate Kafka Using CLI (Server-Level Test)
+9.1 Start Console Producer
+./kafka-console-producer.sh \
+  --bootstrap-server localhost:9092 \
+  --topic dev-topic1
+
+Type messages:
+hello kafka
+
+
+9.2 Start Console Consumer (New Terminal)
+./kafka-console-consumer.sh \
+  --bootstrap-server localhost:9092 \
+  --topic dev-topic1 \
+  --from-beginning
+
+Expected output:
+hello kafka
+
+This confirms:
+Broker is working
+
+
+Topic is functional
+
+
+Data flow is correct
+
+
+
+10. Kafka Server Lifecycle Management
+Stop Kafka Server
+docker stop dev_kafka
+
+
+Start Kafka Server
+docker start dev_kafka
+
+
+Restart Kafka Server
+docker restart dev_kafka
+
+
+Remove Kafka Server (Deletes Data)
+docker rm -f dev_kafka
+
+⚠️ This removes:
+Topics
+
+
+Messages
+
+
+Offsets
+
+
+
+11. Kafka Server Ports
+Port
+Purpose
+9092
+Kafka client communication
+9093
+Controller communication (internal)
+
+
+12. Common Server-Level Issues
+Kafka Not Starting
+Check port availability
+
+
+Check Docker logs:
+
+
+docker logs dev_kafka
+
+
+Connection Refused
+Ensure container is running
+
+
+Verify port mapping
+
+
+Verify localhost:9092
+
+
+
+13. Production Notes
+Use Docker volumes for data persistence
+
+
+Use Docker Compose or Kubernetes for clusters
+
+
+Increase replication-factor for fault tolerance
+
+
+Monitor broker health and disk usage
+
+
+Secure Kafka with SSL/SASL in production
+
+Set up of Kafka Server in the code
+
+
+
+spring.application.name=kafka
+# ===============================
+# Kafka Bootstrap Server
+# ===============================
+spring.kafka.bootstrap-servers=localhost:9092
+# ===============================
+# Kafka Producer Configuration
+# ===============================
+spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer
+spring.kafka.producer.value-serializer=org.apache.kafka.common.serialization.StringSerializer
+# Message delivery guarantees
+spring.kafka.producer.acks=all
+spring.kafka.producer.retries=3
+# ===============================
+# Kafka Consumer Configuration
+# ===============================
+spring.kafka.consumer.group-id=dev-consumer-group
+spring.kafka.consumer.auto-offset-reset=earliest
+spring.kafka.consumer.key-deserializer=org.apache.kafka.common.serialization.StringDeserializer
+spring.kafka.consumer.value-deserializer=org.apache.kafka.common.serialization.StringDeserializer
+# ===============================
+# Listener Configuration (Optional but Recommended)
+# ===============================
+spring.kafka.listener.missing-topics-fatal=false
+# ===============================
+# H2 Database Configuration
+# ===============================
+#springdoc.api-docs.enabled=true
+#springdoc.swagger-ui.enabled=true
+#spring.datasource.url=jdbc:h2:mem:kafkadb
+#spring.datasource.driver-class-name=org.h2.Driver
+#spring.datasource.username=sa
+#spring.datasource.password=
+#spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+#spring.jpa.hibernate.ddl-auto=update
+#spring.jpa.show-sql=true
+## Enable H2 Console
+#spring.h2.console.enabled=true
+#spring.h2.console.path=/h2-console
+## ===============================
+## Kafka Configuration
+## ===============================
+#spring.kafka.bootstrap-servers=localhost:9092
+## Producer
+#spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer
+#spring.kafka.producer.value-serializer=org.apache.kafka.common.serialization.StringSerializer
+#spring.kafka.producer.acks=all
+#spring.kafka.producer.retries=3
+## Consumer
+#spring.kafka.consumer.group-id=dev-consumer-group
+#spring.kafka.consumer.auto-offset-reset=earliest
+#spring.kafka.consumer.key-deserializer=org.apache.kafka.common.serialization.StringDeserializer
+#spring.kafka.consumer.value-deserializer=org.apache.kafka.common.serialization.StringDeserializer
+#spring.kafka.listener.missing-topics-fatal=false
+
+
+
+
+
+
+package com.dev.kafka.kafka;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Service;
+
+
+@Service
+public class ProducerService {
+
+
+   private static final String TOPICNAME="dev-topic1";
+   private final KafkaTemplate<String,String> kafkaTemplate;
+   public ProducerService(KafkaTemplate<String,String> kafkaTemplate){
+       this.kafkaTemplate=kafkaTemplate;
+   }
+   public void sendMessage(String message){
+       kafkaTemplate.send(TOPICNAME,message);
+   }
+}
+package com.dev.kafka.kafka;
+
+
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Service;
+
+
+
+
+
+
+
+
+
+
+
+
+@Service
+public class ConsumerService {
+   @KafkaListener(
+           topics = "dev-topic1",
+   groupId="dev-consumer-group"
+   )
+   public String consumeMessage(String message){
+       System.out.println("Consumed message: "+ message);
+       return message;
+   }
+}
+
+
