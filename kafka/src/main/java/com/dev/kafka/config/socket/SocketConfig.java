@@ -1,4 +1,4 @@
-package com.dev.kafka.config;
+package com.dev.kafka.config.socket;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;

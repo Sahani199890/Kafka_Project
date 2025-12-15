@@ -1,4 +1,4 @@
 package com.dev.kafka.service;
 
-public class Service {
+public class MessageService {
 }
