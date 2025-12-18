@@ -5,7 +5,7 @@ import lombok.*;
 @Setter
 @Getter
 @RequiredArgsConstructor
-public class SignUp {
+public class UsersModel {
 
     private String email;
     private String userName;

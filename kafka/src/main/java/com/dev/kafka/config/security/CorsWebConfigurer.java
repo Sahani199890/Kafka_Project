@@ -39,8 +39,8 @@ public class CorsWebConfigurer {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
-                                "/v1/register",
-                                "/v1/login",
+                                "/users/**",
+                                "/ws/**",
                                 "/kafka/**",
                                 "/error",
                                 "/actuator/**"

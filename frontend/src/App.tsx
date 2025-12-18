@@ -1,12 +1,29 @@
 import { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { connectWebSocket, disconnectWebSocket } from "./socket";
+import Sidebar from "./components/Sidebar";
+import ChatWindow from "./components/ChatWindow";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import "./App.css";
 
-const App: React.FC = () => {
-  const [messages, setMessages] = useState<string[]>([]);
+interface Message {
+  text: string;
+  isSent: boolean;
+  timestamp?: string;
+}
+
+const ChatApp: React.FC = () => {
+  const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
-    connectWebSocket((message: string) => {
-      setMessages((prev) => [...prev, message]);
+    connectWebSocket((messageText: string) => {
+      const newMessage: Message = {
+        text: messageText,
+        isSent: false,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages((prev) => [...prev, newMessage]);
     });
 
     return () => {
@@ -14,15 +31,47 @@ const App: React.FC = () => {
     };
   }, []);
 
+  const handleSendMessage = (text: string) => {
+    const newMessage: Message = {
+      text,
+      isSent: true,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    setMessages((prev) => [...prev, newMessage]);
+  };
+
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Kafka Live Messages</h2>
-      <ul>
-        {messages.map((msg, index) => (
-          <li key={index}>{msg}</li>
-        ))}
-      </ul>
+    <div className="app-container">
+      <Sidebar />
+      <ChatWindow messages={messages} onSendMessage={handleSendMessage} />
     </div>
+  );
+};
+
+const ProtectedRoute = ({ children }: { children:any }) => {
+  const user = localStorage.getItem("user");
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
+const App: React.FC = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <ChatApp />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </Router>
   );
 };
 
