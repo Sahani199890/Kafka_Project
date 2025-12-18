@@ -40,7 +40,10 @@ public class CorsWebConfigurer {
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
                                 "/v1/register",
-                                "/v1/login"
+                                "/v1/login",
+                                "/kafka/**",
+                                "/error",
+                                "/actuator/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

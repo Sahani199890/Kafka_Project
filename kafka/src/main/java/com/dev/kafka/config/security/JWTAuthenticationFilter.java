@@ -35,9 +35,12 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         // Public endpoints – skip JWT processing
         if (requestURI.startsWith("/v1/register")
                 || requestURI.startsWith("/v1/login")
-                || requestURI.startsWith("/h2")
+                || requestURI.startsWith("/h2-console")
                 || requestURI.startsWith("/swagger-ui")
-                || requestURI.startsWith("/v3/api-docs")) {
+                || requestURI.startsWith("/v3/api-docs")
+                || requestURI.startsWith("/kafka")
+                || requestURI.startsWith("/error")
+                || requestURI.startsWith("/actuator")) {
 
             filterChain.doFilter(request, response);
             return;
